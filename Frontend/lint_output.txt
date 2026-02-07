@@ -1,0 +1,10 @@
+
+> vite_react_shadcn_ts@0.0.0 lint
+> eslint .
+
+
+D:\Nehaa\Project\Sign Language\Frontend\tailwind.config.ts
+  104:13  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+✖ 1 problem (1 error, 0 warnings)
+

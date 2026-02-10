@@ -9,36 +9,69 @@ export const useSpeech = () => {
         setIsSupported('speechSynthesis' in window);
     }, []);
 
-    const speak = useCallback((text) => {
-        if (!isSupported) return;
+    const speak = useCallback(async (text) => {
+        setIsSpeaking(true);
+        try {
+            // Try backend TTS first
+            if (isSupported) { // Using isSupported to check if we should even try? No, backend is separate.
+                // Actually, let's try backend first, fallback to browser.
+            }
 
-        // Cancel any ongoing speech
-        window.speechSynthesis.cancel();
+            // Note: Implementing hybrid approach. 
+            // 1. Try backend
+            // 2. If backend fails, use browser TTS
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        utteranceRef.current = utterance;
+            try {
+                const { speakText } = await import('@/lib/api');
+                const audioBlob = await speakText(text);
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = new Audio(audioUrl);
 
-        // Try to find a Tamil voice, fallback to default
-        const voices = window.speechSynthesis.getVoices();
-        const tamilVoice = voices.find(voice =>
-            voice.lang.startsWith('ta') ||
-            voice.name.toLowerCase().includes('tamil')
-        );
+                audio.onended = () => {
+                    setIsSpeaking(false);
+                    URL.revokeObjectURL(audioUrl);
+                };
+                audio.onerror = () => {
+                    throw new Error("Audio playback failed");
+                };
 
-        if (tamilVoice) {
-            utterance.voice = tamilVoice;
+                await audio.play();
+                return; // Success
+            } catch (err) {
+                console.warn("Backend TTS failed, falling back to browser TTS", err);
+            }
+
+            // Fallback to browser TTS
+            if (!isSupported) return;
+
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utteranceRef.current = utterance;
+
+            const voices = window.speechSynthesis.getVoices();
+            const tamilVoice = voices.find(voice =>
+                voice.lang.startsWith('ta') ||
+                voice.name.toLowerCase().includes('tamil')
+            );
+
+            if (tamilVoice) {
+                utterance.voice = tamilVoice;
+            }
+
+            utterance.lang = 'ta-IN';
+            utterance.rate = 0.8;
+            utterance.pitch = 1;
+            utterance.volume = 1;
+
+            utterance.onstart = () => setIsSpeaking(true);
+            utterance.onend = () => setIsSpeaking(false);
+            utterance.onerror = () => setIsSpeaking(false);
+
+            window.speechSynthesis.speak(utterance);
+        } catch (e) {
+            console.error("Speech error", e);
+            setIsSpeaking(false);
         }
-
-        utterance.lang = 'ta-IN';
-        utterance.rate = 0.8;
-        utterance.pitch = 1;
-        utterance.volume = 1;
-
-        utterance.onstart = () => setIsSpeaking(true);
-        utterance.onend = () => setIsSpeaking(false);
-        utterance.onerror = () => setIsSpeaking(false);
-
-        window.speechSynthesis.speak(utterance);
     }, [isSupported]);
 
     const stop = useCallback(() => {

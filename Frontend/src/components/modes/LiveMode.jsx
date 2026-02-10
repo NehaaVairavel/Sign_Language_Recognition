@@ -14,7 +14,7 @@ export const LiveMode = () => {
         stopDetection,
         simulateDetection,
         isHandPresent
-    } = useSignRecognition();
+    } = useSignRecognition(videoRef);
     const { speak, isSpeaking } = useSpeech();
 
     // Start detection when camera starts
@@ -75,38 +75,54 @@ export const LiveMode = () => {
                             status={getCameraStatus()}
                         />
 
-                        {/* Demo instruction */}
-                        {isStreaming && (
-                            <div className="glass-card p-4 text-center">
-                                <p className="text-sm text-muted-foreground">
-                                    <strong>Demo Mode:</strong> Click a letter below to simulate detection
-                                </p>
-                            </div>
-                        )}
+                        {/* Demo instruction removed */}
                     </div>
 
                     {/* Result Section */}
                     <div className="space-y-4">
-                        <TamilLetterDisplay
-                            letter={detectedLetter}
-                            onSpeak={handleSpeak}
-                            isSpeaking={isSpeaking}
-                            showDetails={true}
-                        />
+                        {detectedLetter ? (
+                            <TamilLetterDisplay
+                                letter={detectedLetter}
+                                onSpeak={handleSpeak}
+                                isSpeaking={isSpeaking}
+                                showDetails={true}
+                            />
+                        ) : (
+                            <div className="flex flex-col items-center justify-center h-full min-h-[300px] glass-card p-8 text-center animate-in fade-in-50">
+                                {isStreaming ? (
+                                    <>
+                                        {isHandPresent ? (
+                                            <>
+                                                <span className="text-4xl mb-4 animate-pulse">⏳</span>
+                                                <h3 className="text-xl font-semibold mb-2">Processing...</h3>
+                                                <p className="text-muted-foreground">
+                                                    Analyzing your sign. Hold steady!
+                                                </p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="text-4xl mb-4">✋</span>
+                                                <h3 className="text-xl font-semibold mb-2">No Hand Detected</h3>
+                                                <p className="text-muted-foreground">
+                                                    Bring your hand into the camera view to start translating.
+                                                </p>
+                                            </>
+                                        )}
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="text-4xl mb-4">📷</span>
+                                        <h3 className="text-xl font-semibold mb-2">Camera Off</h3>
+                                        <p className="text-muted-foreground">
+                                            Start the camera to begin sign recognition.
+                                        </p>
+                                    </>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                {/* Letter Grid for Demo */}
-                <div className="mt-8">
-                    <h3 className="text-lg font-semibold text-foreground mb-4 text-center">
-                        Click a letter to simulate detection
-                    </h3>
-                    <LetterGrid
-                        onLetterClick={handleLetterClick}
-                        selectedLetterId={detectedLetter?.id}
-                        showHints={true}
-                    />
-                </div>
             </div>
         </div>
     );

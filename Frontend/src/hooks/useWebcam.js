@@ -19,14 +19,16 @@ export const useWebcam = () => {
                 }
             });
 
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                streamRef.current = stream;
-                setIsStreaming(true);
-                setHasPermission(true);
-            }
+            // Store stream for cleanup/attachment
+            streamRef.current = stream;
+
+            // Update state to trigger render of video element
+            setIsStreaming(true);
+            setHasPermission(true);
+
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : 'Failed to access camera';
+            console.error("Camera access error:", err);
 
             if (errorMessage.includes('Permission denied') || errorMessage.includes('NotAllowedError')) {
                 setError('Camera permission denied. Please allow camera access to use this feature.');
@@ -53,6 +55,13 @@ export const useWebcam = () => {
 
         setIsStreaming(false);
     }, []);
+
+    // attach stream to video element when streaming starts
+    useEffect(() => {
+        if (isStreaming && videoRef.current && streamRef.current) {
+            videoRef.current.srcObject = streamRef.current;
+        }
+    }, [isStreaming]);
 
     // Cleanup on unmount
     useEffect(() => {

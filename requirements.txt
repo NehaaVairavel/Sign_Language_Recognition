@@ -10,3 +10,6 @@ seaborn
 pillow
 python-dotenv
 google-cloud-texttospeech
+Flask
+flask-cors
+

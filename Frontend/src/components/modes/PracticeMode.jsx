@@ -13,7 +13,7 @@ import { getRandomLetter } from '@/lib/tamilLetters';
 
 export const PracticeMode = () => {
     const { videoRef, isStreaming, error, startCamera, stopCamera } = useWebcam();
-    const { simulateDetection } = useSignRecognition();
+    const { simulateDetection } = useSignRecognition(videoRef);
     const { speak } = useSpeech();
 
     const [targetLetter, setTargetLetter] = useState(null);

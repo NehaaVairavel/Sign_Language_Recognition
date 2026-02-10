@@ -1,0 +1,23 @@
+mat1 and mat2 must have the same dtype, but got Double and Float
+Traceback (most recent call last):
+  File "D:\Nehaa\Project\Sign Language\backend\app.py", line 111, in predict_sign
+    outputs = model(x)
+  File "D:\Nehaa\Project\Sign Language\venv\lib\site-packages\torch\nn\modules\module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "D:\Nehaa\Project\Sign Language\venv\lib\site-packages\torch\nn\modules\module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "D:\Nehaa\Project\Sign Language\backend\app.py", line 61, in forward
+    return self.net(x)
+  File "D:\Nehaa\Project\Sign Language\venv\lib\site-packages\torch\nn\modules\module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "D:\Nehaa\Project\Sign Language\venv\lib\site-packages\torch\nn\modules\module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "D:\Nehaa\Project\Sign Language\venv\lib\site-packages\torch\nn\modules\container.py", line 253, in forward
+    input = module(input)
+  File "D:\Nehaa\Project\Sign Language\venv\lib\site-packages\torch\nn\modules\module.py", line 1776, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+  File "D:\Nehaa\Project\Sign Language\venv\lib\site-packages\torch\nn\modules\module.py", line 1787, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "D:\Nehaa\Project\Sign Language\venv\lib\site-packages\torch\nn\modules\linear.py", line 134, in forward
+    return F.linear(input, self.weight, self.bias)
+RuntimeError: mat1 and mat2 must have the same dtype, but got Double and Float

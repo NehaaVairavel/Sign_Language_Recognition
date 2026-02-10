@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Volume2, Camera, Check, X, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { CameraFeed } from '@/components/CameraFeed';
@@ -7,6 +7,7 @@ import { FeedbackDisplay } from '@/components/FeedbackDisplay';
 import { TAMIL_LETTERS } from '@/lib/tamilLetters';
 import { useSpeech } from '@/hooks/useSpeech';
 import { useWebcam } from '@/hooks/useWebcam';
+import { useSignRecognition } from '@/hooks/useSignRecognition';
 import { cn } from '@/lib/utils';
 
 export const LearnMode = () => {
@@ -16,8 +17,35 @@ export const LearnMode = () => {
 
     const { speak, isSpeaking } = useSpeech();
     const { videoRef, isStreaming, error, startCamera, stopCamera } = useWebcam();
+    const {
+        detectedLetter,
+        startDetection,
+        stopDetection,
+        isHandPresent
+    } = useSignRecognition(videoRef);
 
     const currentLetter = TAMIL_LETTERS[currentIndex];
+
+    // Manage detection state based on mode
+    useEffect(() => {
+        if (isStreaming && learningStep === 'practice') {
+            startDetection();
+        } else {
+            stopDetection();
+        }
+    }, [isStreaming, learningStep, startDetection, stopDetection]);
+
+    // Auto-verify when a letter is detected
+    useEffect(() => {
+        if (learningStep === 'practice' && detectedLetter) {
+            if (detectedLetter.id === currentLetter.id) {
+                setIsCorrect(true);
+                setLearningStep('feedback');
+                speak("Correct! " + currentLetter.letter);
+                speak(currentLetter.letter);
+            }
+        }
+    }, [detectedLetter, learningStep, currentLetter, speak]);
 
     const goToNext = () => {
         const nextIndex = (currentIndex + 1) % TAMIL_LETTERS.length;
@@ -55,6 +83,7 @@ export const LearnMode = () => {
         }
     };
 
+    // Manual verify (kept for fallback/testing if needed, but UI can be simplified)
     const handleVerifySign = useCallback((selectedLetter) => {
         const correct = selectedLetter.id === currentLetter.id;
         setIsCorrect(correct);
@@ -74,7 +103,8 @@ export const LearnMode = () => {
         if (!isStreaming) return 'idle';
         if (isCorrect === true) return 'success';
         if (isCorrect === false) return 'error';
-        return 'detecting';
+        if (learningStep === 'practice') return 'detecting'; // Shows "Detecting..." overlay
+        return 'idle';
     };
 
     return (
@@ -178,55 +208,23 @@ export const LearnMode = () => {
                                 {learningStep === 'practice' && (
                                     <div className="glass-card p-4">
                                         <p className="text-sm text-center text-muted-foreground mb-3">
-                                            <strong>Demo Mode:</strong> Select the letter you're signing:
+                                            <strong>Practice Mode:</strong> Show the sign to the camera.
+                                            {detectedLetter && (
+                                                <span className="block mt-1 font-semibold text-primary">
+                                                    Detected: {detectedLetter.letter} ({detectedLetter.transliteration})
+                                                </span>
+                                            )}
                                         </p>
-                                        <div className="grid grid-cols-4 gap-2">
-                                            {TAMIL_LETTERS.slice(0, 4).map((letter) => (
-                                                <button
-                                                    key={letter.id}
-                                                    onClick={() => handleVerifySign(letter)}
-                                                    className={cn(
-                                                        "p-2 rounded-lg border-2 border-border bg-card hover:border-primary transition-all",
-                                                        "hover:bg-primary/5"
-                                                    )}
-                                                >
-                                                    <span className="font-tamil text-lg font-bold text-primary">
-                                                        {letter.letter}
-                                                    </span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <div className="grid grid-cols-4 gap-2 mt-2">
-                                            {TAMIL_LETTERS.slice(4, 8).map((letter) => (
-                                                <button
-                                                    key={letter.id}
-                                                    onClick={() => handleVerifySign(letter)}
-                                                    className={cn(
-                                                        "p-2 rounded-lg border-2 border-border bg-card hover:border-primary transition-all",
-                                                        "hover:bg-primary/5"
-                                                    )}
-                                                >
-                                                    <span className="font-tamil text-lg font-bold text-primary">
-                                                        {letter.letter}
-                                                    </span>
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <div className="grid grid-cols-4 gap-2 mt-2">
-                                            {TAMIL_LETTERS.slice(8, 12).map((letter) => (
-                                                <button
-                                                    key={letter.id}
-                                                    onClick={() => handleVerifySign(letter)}
-                                                    className={cn(
-                                                        "p-2 rounded-lg border-2 border-border bg-card hover:border-primary transition-all",
-                                                        "hover:bg-primary/5"
-                                                    )}
-                                                >
-                                                    <span className="font-tamil text-lg font-bold text-primary">
-                                                        {letter.letter}
-                                                    </span>
-                                                </button>
-                                            ))}
+
+                                        {/* Optional: Keep manual buttons for debugging/fallback if detection isn't working */}
+                                        <div className="text-xs text-center text-muted-foreground mt-4">
+                                            Having trouble?
+                                            <button
+                                                onClick={() => handleVerifySign(currentLetter)}
+                                                className="ml-1 underline hover:text-primary"
+                                            >
+                                                Skip/Manual Verify
+                                            </button>
                                         </div>
                                     </div>
                                 )}
